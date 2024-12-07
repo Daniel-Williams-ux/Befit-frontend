@@ -25,7 +25,7 @@ function Step4() {
       <div className="bg-white text-center mb-6 shadow-lg rounded-lg p-3 w-full max-w-lg sm:max-w-xl relative">
         <button
           onClick={handleBack}  // Back button logic
-          className="absolute top-6 left-6 text-gray-600 text-sm font-archivoSemi"
+          className="absolute top-6 left-6 text-text-helpColor text-sm font-archivoSemi"
         >
           ← Back
         </button>
@@ -56,15 +56,10 @@ function Step4() {
         {/* Continue Button */}
         <button
           onClick={handleContinue}
-          className="w-full bg-purple-600 text-white py-3 rounded-full hover:bg-purple-700 text-center text-sm font-medium"
+          className="w-full bg-headerColor text-white py-3 rounded-full hover:hover:bg-blue-700 text-center text-sm font-medium"
         >
           Continue →
         </button>
-      </div>
-
-      {/* Footer Text */}
-      <div className="text-center w-full mt-6 text-sm text-blue-500 font-archivoSemi font-normal">
-        You can create multiple community with the same email address
       </div>
 
       {/* Help Center */}

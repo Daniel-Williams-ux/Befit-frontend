@@ -29,7 +29,7 @@ function Step5() {
         >
           ← Back
         </button>
-        <p className="text-xs font-archivoSemi font-normal text-gray-600">STEP 5/5</p>
+        <p className="text-xs font-archivoSemi font-normal text-text-helpColor">STEP 5/5</p>
         <h1 className="text-sm font-medium font-archivoSemi text-black">Gender</h1>
       </div>
 
@@ -75,7 +75,7 @@ function Step5() {
         {/* Continue Button */}
         <button
           onClick={handleContinue}
-          className="w-full bg-purple-600 text-white py-3 rounded-full hover:bg-purple-700 text-center text-sm font-medium"
+          className="w-full bg-headerColor text-white py-3 rounded-full hover:hover:bg-blue-700 text-center text-sm font-medium"
         >
           Continue →
         </button>

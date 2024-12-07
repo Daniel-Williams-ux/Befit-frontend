@@ -20,7 +20,7 @@ function LoginPage() {
     <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4">
       {/* Step Section */}
       <div className="bg-white text-center mb-6 shadow-lg rounded-lg p-3 w-full max-w-lg sm:max-w-xl">
-        <p className="text-xs font-archivoSemi font-normal text-gray-600">STEP 1/5</p>
+        <p className="text-xs font-archivoSemi font-normal text-helpColor">STEP 1/5</p>
         <h1 className="text-sm font-medium font-archivoSemi text-black">Authentication</h1>
       </div>
 

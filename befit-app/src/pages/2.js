@@ -29,7 +29,7 @@ function Step2() {
         >
           ← Back
         </button>
-        <p className="text-xs font-archivoSemi font-normal text-gray-600">STEP 2/5</p>
+        <p className="text-xs font-archivoSemi font-normal text-helpColor">STEP 2/5</p>
         <h1 className="text-sm font-medium font-archivoSemi text-black">Gender</h1>
       </div>
 

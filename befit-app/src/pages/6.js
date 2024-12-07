@@ -40,7 +40,7 @@ function Step5() {
           {/* Continue Button */}
           <button
             onClick={handleContinue}
-            className="bg-headerColor text-white py-3 px-6 rounded-full text-sm font-medium hover:bg-purple-700 focus:outline-none"
+            className="bg-headerColor text-white py-3 px-6 rounded-full text-sm font-medium hover:hover:bg-blue-700 focus:outline-none"
           >
             Yes, Let’s go →
           </button>
