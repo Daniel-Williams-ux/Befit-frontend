@@ -1,22 +1,30 @@
-const { generateToken } = require('../utils/jwt'); // Import from utils/jwt.js
-const bcrypt = require('bcrypt');
-const { check, validationResult } = require('express-validator'); // Import validator
-const User = require('../models/userModel');
+const User = require('../models/Users');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const { check, validationResult } = require('express-validator');
 
-// Middleware for validating login inputs
-const validateLogin = [
-  check('email').isEmail().withMessage('Invalid email'),
-  check('password').notEmpty().withMessage('Password is required'),
-  (req, res, next) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
-    next();
-  },
-];
+// Generate JWT Token
+const generateToken = (id) => {
+  return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+};
 
-// Middleware for validating registration inputs
+// Helper to send token as an HTTP-only cookie
+const sendTokenResponse = (user, res) => {
+  const token = generateToken(user._id);
+
+  const cookieOptions = {
+    expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production', // Enable for HTTPS
+  };
+
+  res
+    .cookie('token', token, cookieOptions)
+    .status(200)
+    .json({ success: true, user, token });
+};
+
+// Validate Registration Inputs
 const validateRegister = [
   check('email').isEmail().withMessage('Invalid email'),
   check('password')
@@ -31,39 +39,61 @@ const validateRegister = [
   },
 ];
 
-// Login controller
-const login = async (req, res) => {
-  const { email, password } = req.body;
+// Validate Login Inputs
+const validateLogin = [
+  check('email').isEmail().withMessage('Invalid email'),
+  check('password').notEmpty().withMessage('Password is required'),
+  (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+    next();
+  },
+];
 
-  try {
-    const user = await User.findOne({ email });
-    if (!user) return res.status(404).json({ message: 'User not found' });
-
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(401).json({ message: 'Invalid credentials' });
-
-    const token = generateToken(user._id); // Use imported generateToken
-    res.status(200).json({ message: 'Login successful', token });
-  } catch (err) {
-    res.status(500).json({ message: 'Error logging in', error: err.message });
-  }
-};
-
-// Register controller
+// Register Controller
 const register = async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    // Hash the password
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // Check if user exists
+    const userExists = await User.findOne({ email });
+    if (userExists) {
+      return res.status(400).json({ message: 'User already exists' });
+    }
 
-    // Create and save the user
-    const newUser = new User({ email, password: hashedPassword });
-    await newUser.save();
+    // Create new user
+    const newUser = await User.create({ email, password });
 
-    res.status(201).json({ message: 'User registered successfully' });
+    // Send token as HTTP-only cookie
+    sendTokenResponse(newUser, res);
   } catch (err) {
-    res.status(500).json({ message: 'Error registering user', error: err.message });
+    res.status(500).json({ message: 'Server Error', error: err.message });
+  }
+};
+
+// Login Controller
+const login = async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    // Find user
+    const user = await User.findOne({ email }).select('+password');
+    if (!user) {
+      return res.status(400).json({ message: 'Invalid Credentials' });
+    }
+
+    // Check password
+    const isMatch = await user.matchPassword(password);
+    if (!isMatch) {
+      return res.status(400).json({ message: 'Invalid Credentials' });
+    }
+
+    // Send token as HTTP-only cookie
+    sendTokenResponse(user, res);
+  } catch (err) {
+    res.status(500).json({ message: 'Server Error', error: err.message });
   }
 };
 
