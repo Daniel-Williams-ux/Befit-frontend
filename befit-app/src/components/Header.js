@@ -22,6 +22,7 @@ const Header = () => {
               width={100}
               height={40}
               priority
+              
               style={{ height: "100%", width: "auto" }}
             />
             </div>
@@ -50,6 +51,12 @@ const Header = () => {
             Login
           </Link>
         </div>
+        {/* Login Button - Visible on larger screens */}
+        <div className="hidden md:flex">
+          <Link href="/signup" className="bg-loginColor font-dmSans font-medium text-white text-base px-9 py-2 border rounded-full hover:bg-red-700 hover:text-white transition-colors">
+            Signup
+          </Link>
+        </div>
 
         {/* Mobile Menu Button */}
         <button className="md:hidden text-gray-900 focus:outline-none" onClick={() => setIsMenuOpen(!isMenuOpen)}>
@@ -70,6 +77,7 @@ const Header = () => {
               Join our community
             </Link>
             <Link href="/login" className="text-white text-base border rounded-full font-dmSans font-medium  bg-loginColor hover:bg-red-700 px-9 py-2" onClick={() => setIsMenuOpen(false)}>Login</Link>
+            <Link href="/signup" className="text-white text-base border rounded-full font-dmSans font-medium  bg-loginColor hover:bg-red-700 px-9 py-2" onClick={() => setIsMenuOpen(false)}>Signup</Link>
           </nav>
         </div>
       )}

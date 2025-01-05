@@ -1,19 +1,68 @@
 import React, { useState } from 'react';
-import { useRouter } from 'next/router';  // Import useRouter for navigation
+import { useRouter } from 'next/router';
 import Image from 'next/image';
 import GoogleImage from '/public/images/google-icon.png';
+import { GoogleLogin } from 'react-google-login';
 
 function LoginPage() {
   const [passwordVisible, setPasswordVisible] = useState(false);
-  const router = useRouter();  // Initialize useRouter
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState(null);
+  const [isLoading, setIsLoading] = useState(false); // Loading state
+  const router = useRouter();
 
   const togglePasswordVisibility = () => {
     setPasswordVisible((prev) => !prev);
   };
 
-  // Handle continue button click to navigate to Step 2
-  const handleContinue = () => {
-    router.push('/2');  // Navigate to Step 2 (2.js)
+  const handleGoogleLogin = async (googleData) => {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/google/callback`, {
+        method: 'POST',
+        body: JSON.stringify({ token: googleData.tokenId }),
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        localStorage.setItem('token', data.token);
+        router.push('/2');
+      } else {
+        setError(data.message || 'Authentication failed');
+      }
+    } catch (err) {
+      setError('An unexpected error occurred.');
+    }
+  };
+
+  const handleContinue = async () => {
+    setIsLoading(true); // Start loading
+    try {
+      setError(null); // Clear previous errors
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        localStorage.setItem('token', data.token);
+        router.push('/2');
+      } else {
+        setError(data.message || 'Invalid email or password. Please try again.');
+      }
+    } catch (err) {
+      setError('An unexpected error occurred. Please try again.');
+    } finally {
+      setIsLoading(false); // End loading
+    }
   };
 
   return (
@@ -26,8 +75,10 @@ function LoginPage() {
 
       {/* Main Form Section */}
       <div className="bg-white shadow-lg rounded-lg p-6 w-full max-w-lg sm:max-w-xl space-y-6">
-        {/* Title */}
         <h2 className="text-left text-xl font-bold font-archivoSemi text-formColor">Let’s get you in</h2>
+
+        {/* Show error message if any */}
+        {error && <p className="text-red-500 text-sm">{error}</p>}
 
         {/* Email Field */}
         <div className="space-y-2">
@@ -38,6 +89,8 @@ function LoginPage() {
             type="email"
             id="email"
             placeholder="Enter your email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             className="w-full p-3 border border-gray-300 text-xs text-headerColor font-archivoSemi rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
           />
         </div>
@@ -52,6 +105,8 @@ function LoginPage() {
               type={passwordVisible ? 'text' : 'password'}
               id="password"
               placeholder="••••••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               className="w-full p-3 focus:ring-2 text-xs text-headerColor font-archivoSemi focus:ring-blue-500 focus:outline-none"
             />
             <button
@@ -66,21 +121,41 @@ function LoginPage() {
 
         {/* Continue Button */}
         <button
-          onClick={handleContinue}  // Handle click to navigate to next step
-          className="w-full bg-headerColor text-white py-3 rounded-full hover:bg-blue-700 text-center text-sm font-medium"
+          onClick={handleContinue}
+          disabled={isLoading} // Disable button while loading
+          className={`w-full bg-headerColor text-white py-3 rounded-full hover:bg-blue-700 text-center text-sm font-medium ${
+            isLoading ? 'opacity-50 cursor-not-allowed' : ''
+          }`}
         >
-          Continue →
+          {isLoading ? 'Logging in...' : 'Continue →'} {/* Show loading text */}
         </button>
       </div>
 
-      {/* Continue with Google */}
-      <a
-        href="/api/auth/google"
-        className="bg-white max-w-lg sm:max-w-xl flex items-center justify-center mt-6 space-x-2 shadow-lg rounded-lg p-3 w-full"
-      >
-        <Image src={GoogleImage} alt="Google" className="w-6 h-6" />
-        <p className="text-base font-archivoSemi font-medium text-formColor">Continue with Google</p>
-      </a>
+      {/* Google Login Button */}
+      <GoogleLogin
+        clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID}
+        buttonText="Continue with Google"
+        onSuccess={handleGoogleLogin}
+        onFailure={(error) => setError('Google login failed.')}
+        cookiePolicy="single_host_origin"
+        render={(renderProps) => (
+          <button
+            onClick={renderProps.onClick}
+            disabled={renderProps.disabled}
+            className="bg-white max-w-lg sm:max-w-xl flex items-center justify-center mt-6 space-x-2 shadow-lg rounded-lg p-3 w-full"
+          >
+            <Image src={GoogleImage} alt="Google" className="w-6 h-6" />
+            <p className="text-base font-archivoSemi font-medium text-formColor">Continue with Google</p>
+          </button>
+        )}
+      />
+
+      <p className="text-sm text-gray-600 mt-4">
+        Don't have an account?{' '}
+        <a href="/signup" className="text-blue-600 hover:underline font-medium">
+          Sign up
+        </a>
+      </p>
 
       {/* Help Center */}
       <div className="text-left w-full mt-40">

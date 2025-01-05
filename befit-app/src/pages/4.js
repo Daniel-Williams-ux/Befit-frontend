@@ -1,72 +1,88 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import checkAuth from '../utils/checkAuth';
 
 function Step4() {
   const [goal, setGoal] = useState('');
+  const [error, setError] = useState(null);
   const router = useRouter();
 
-  const handleGoalSelect = (selectedGoal) => {
-    setGoal(selectedGoal);
-  };
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    const authenticateUser = async () => {
+      const isAuthenticated = await checkAuth(); // Improved: Removed router.push from here
+      if (!isAuthenticated) return;
+    };
+    authenticateUser();
+  }, []);
 
-  const handleContinue = () => {
-    // Navigate to the next step (Step 5)
-    router.push('/5');
-  };
+  const handleContinue = async () => {
+    if (!goal) {
+      setError('Please select your fitness goal');
+      return;
+    }
 
-  const handleBack = () => {
-    // Navigate back to Step 3
-    router.push('/3');
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/step4`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ goal }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        router.push('/5'); // Move to the next step (Step 5)
+      } else {
+        setError(data.message || 'Failed to save fitness goal');
+      }
+    } catch (err) {
+      setError('An unexpected error occurred.');
+    }
   };
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4">
-      {/* Step Section */}
       <div className="bg-white text-center mb-6 shadow-lg rounded-lg p-3 w-full max-w-lg sm:max-w-xl relative">
-        <button
-          onClick={handleBack}  // Back button logic
-          className="absolute top-6 left-6 text-text-helpColor text-sm font-archivoSemi"
-        >
-          ← Back
-        </button>
-        <p className="text-xs font-archivoSemi font-normal text-gray-600">STEP 4/5</p>
-        <h1 className="text-sm font-medium font-archivoSemi text-black">Fitness goal</h1>
+        <p className="text-xs font-archivoSemi font-normal text-helpColor">STEP 4/5</p>
+        <h1 className="text-sm font-medium font-archivoSemi text-black">Fitness Goal</h1>
       </div>
 
-      {/* Main Form Section */}
       <div className="bg-white shadow-lg rounded-lg p-6 w-full max-w-lg sm:max-w-xl space-y-6">
-        {/* Title */}
-        <h2 className="text-left text-xl font-bold font-archivoSemi text-formColor">What are you trying to achieve</h2>
+        <h2 className="text-left text-xl font-bold font-dmSans text-formColor">Select your fitness goal</h2>
+        {error && <p className="text-red-500 text-sm">{error}</p>}
 
-        {/* Button Group for Fitness Goals */}
-        <div className="grid grid-cols-2 gap-4">
-          {['Flat Belly', 'Lose Weight', 'Gain Muscle', 'Build Abs', 'Stay fit', 'Others'].map((goalOption) => (
-            <button
-              key={goalOption}
-              onClick={() => handleGoalSelect(goalOption)}
-              className={`w-full py-2 rounded-full border-2 ${
-                goal === goalOption ? 'bg-purple-600 text-white' : 'bg-white text-gray-600 border-gray-300'
-              } text-sm font-semibold hover:bg-purple-700 hover:text-white`}
-            >
-              {goalOption}
-            </button>
-          ))}
+        {/* Goal Options */}
+        <div
+          onClick={() => { setGoal('weight_loss'); setError(null); }} // Clear error when user selects goal
+          className={`p-4 rounded-lg text-center ${goal === 'weight_loss' ? 'bg-questionColor text-white' : 'bg-inputBg text-formColor'}`}
+        >
+          Weight Loss
+        </div>
+        <div
+          onClick={() => { setGoal('muscle_gain'); setError(null); }} // Clear error when user selects goal
+          className={`p-4 rounded-lg text-center ${goal === 'muscle_gain' ? 'bg-questionColor text-white' : 'bg-inputBg text-formColor'}`}
+        >
+          Muscle Gain
+        </div>
+        <div
+          onClick={() => { setGoal('maintain_fitness'); setError(null); }} // Clear error when user selects goal
+          className={`p-4 rounded-lg text-center ${goal === 'maintain_fitness' ? 'bg-questionColor text-white' : 'bg-inputBg text-formColor'}`}
+        >
+          Maintain Fitness
         </div>
 
         {/* Continue Button */}
         <button
           onClick={handleContinue}
-          className="w-full bg-headerColor text-white py-3 rounded-full hover:hover:bg-blue-700 text-center text-sm font-medium"
+          className="w-full bg-headerColor text-white py-3 rounded-full hover:bg-blue-700 text-center text-sm font-medium"
         >
           Continue →
         </button>
-      </div>
-
-      {/* Help Center */}
-      <div className="text-left w-full mt-40">
-        <a href="/help" className="text-sm text-helpColor font-archivoSemi font-normal hover:underline">
-          * Help Center
-        </a>
       </div>
     </div>
   );

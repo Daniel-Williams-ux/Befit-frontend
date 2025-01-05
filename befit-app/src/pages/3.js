@@ -1,105 +1,104 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import checkAuth from '../utils/checkAuth';
 
 function Step3() {
-  const [age, setAge] = useState('');
-  const [height, setHeight] = useState('');
-  const [weight, setWeight] = useState('');
+  const [formData, setFormData] = useState({ age: '', height: '', weight: '' });
+  const [error, setError] = useState(null);
   const router = useRouter();
 
-  const handleContinue = () => {
-    // Navigate to the next step (Step 4)
-    router.push('/4');
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    const authenticateUser = async () => {
+      const isAuthenticated = await checkAuth();
+      if (!isAuthenticated) {
+        router.replace('/login'); // Redirect to login if not authenticated
+      }
+    };
+    authenticateUser();
+  }, [router]);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    setError(null); // Clear error when input changes
   };
 
-  const handleBack = () => {
-    // Navigate back to Step 2
-    router.push('/2');
+  const handleContinue = async () => {
+    const { age, height, weight } = formData;
+
+    // Validate that all fields are filled out
+    if (!age || !height || !weight) {
+      setError('All fields are required');
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/step3`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ age, height, weight }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setError(null); // Clear any previous error before navigation
+        router.push('/4'); // Move to the next step (Step 4)
+      } else {
+        setError(data.message || 'Failed to save details');
+      }
+    } catch (err) {
+      setError('An unexpected error occurred.');
+    }
   };
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4">
-      {/* Step Section */}
       <div className="bg-white text-center mb-6 shadow-lg rounded-lg p-3 w-full max-w-lg sm:max-w-xl relative">
-        <button
-          onClick={handleBack}  // Back button logic
-          className="absolute top-6 left-6 text-text-helpColor text-sm font-archivoSemi"
-        >
-          ← Back
-        </button>
-        <p className="text-xs font-archivoSemi font-normal text-gray-600">STEP 3/5</p>
-        <h1 className="text-sm font-medium font-archivoSemi text-black">Onboarding</h1>
+        <p className="text-xs font-archivoSemi font-normal text-helpColor">STEP 3/5</p>
+        <h1 className="text-sm font-medium font-archivoSemi text-black">Profile Details</h1>
       </div>
 
-      {/* Main Form Section */}
       <div className="bg-white shadow-lg rounded-lg p-6 w-full max-w-lg sm:max-w-xl space-y-6">
-        {/* Title */}
-        <h2 className="text-left text-xl font-bold font-archivoSemi text-formColor">Enter your age</h2>
+        <h2 className="text-left text-xl font-bold font-dmSans text-formColor">Enter your details</h2>
+        {error && <p className="text-red-500 text-sm">{error}</p>}
 
-        {/* Input Fields */}
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <label className="text-sm font-normal text-formColor" htmlFor="age">
-              Enter your age here
-            </label>
-            <input
-              type="number"
-              id="age"
-              value={age}
-              onChange={(e) => setAge(e.target.value)}
-              placeholder="Enter your age"
-              className="w-full p-3 border border-gray-300 text-xs text-headerColor font-archivoSemi rounded-full focus:ring-2 focus:ring-blue-500 focus:outline-none"
-            />
-          </div>
+        <input
+          name="age"
+          type="number"
+          placeholder="Age"
+          value={formData.age}
+          onChange={handleInputChange}
+          className="w-full p-3 rounded-lg bg-inputBg text-formColor"
+        />
+        <input
+          name="height"
+          type="number"
+          placeholder="Height (in cm)"
+          value={formData.height}
+          onChange={handleInputChange}
+          className="w-full p-3 rounded-lg bg-inputBg text-formColor"
+        />
+        <input
+          name="weight"
+          type="number"
+          placeholder="Weight (in kg)"
+          value={formData.weight}
+          onChange={handleInputChange}
+          className="w-full p-3 rounded-lg bg-inputBg text-formColor"
+        />
 
-          <div className="space-y-2">
-            <label className="text-sm font-normal text-formColor" htmlFor="height">
-              Enter your height here
-            </label>
-            <input
-              type="text"
-              id="height"
-              value={height}
-              onChange={(e) => setHeight(e.target.value)}
-              placeholder="Enter your height"
-              className="w-full p-3 border border-gray-300 text-xs text-headerColor font-archivoSemi rounded-full focus:ring-2 focus:ring-blue-500 focus:outline-none"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-normal text-formColor" htmlFor="weight">
-              Enter your weight here
-            </label>
-            <input
-              type="text"
-              id="weight"
-              value={weight}
-              onChange={(e) => setWeight(e.target.value)}
-              placeholder="Enter your weight"
-              className="w-full p-3 border border-gray-300 text-xs text-headerColor font-archivoSemi rounded-full focus:ring-2 focus:ring-blue-500 focus:outline-none"
-            />
-          </div>
-        </div>
-
-        {/* Continue Button */}
         <button
           onClick={handleContinue}
-          className="w-full bg-headerColor text-white py-3 rounded-full hover:hover:bg-blue-700 text-center text-sm font-medium"
+          className="w-full bg-headerColor text-white py-3 rounded-full hover:bg-blue-700 text-center text-sm font-medium"
         >
           Continue →
         </button>
-      </div>
-
-      {/* Footer Text */}
-      <div className="text-center w-full mt-6 text-base text-headerColor font-archivoSemi font-normal">
-        You can create multiple community with the same email address
-      </div>
-
-      {/* Help Center */}
-      <div className="text-left w-full mt-40">
-        <a href="/help" className="text-sm text-helpColor font-archivoSemi font-normal hover:underline">
-          * Help Center
-        </a>
       </div>
     </div>
   );
