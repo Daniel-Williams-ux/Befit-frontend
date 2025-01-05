@@ -4,7 +4,8 @@ const express = require('express');
 const connectDB = require('./config/db');
 const cookieParser = require('cookie-parser');
 const authRoutes = require('./routes/authRoutes');
-const userRoutes = require('./routes/userRoutes');
+const userRoutes = require('./routes/user');
+//const userRoutes = require('./routes/userRoutes');
 const expressSession = require('express-session');
 const passport = require('passport');
 const cors = require('cors');
@@ -20,18 +21,21 @@ app.use(cookieParser());  // Parse cookies
 // Middleware for JSON request bodies
 app.use(express.json());
 
-// Session middleware setup (must be before passport.initialize())
+
 app.use(
   expressSession({
-    secret: process.env.SESSION_SECRET || 'your-secret-key', // Replace with a strong secret
+    secret: process.env.SESSION_SECRET || 'fallback-secret', // Replace with a strong secret
     resave: false,
     saveUninitialized: true,
     cookie: {
-      secure: process.env.NODE_ENV === 'production', // Use `secure: true` in production with HTTPS
-      httpOnly: true,
+      // Secure cookies should only be used in production, i.e., when your app uses HTTPS
+      secure: process.env.NODE_ENV === 'production', // Use `secure: true` only in production (for HTTPS)
+      httpOnly: true, // Prevent JavaScript from accessing the cookie
+      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax', // More relaxed setting in dev
     },
   })
 );
+
 
 // Initialize Passport after session middleware
 app.use(passport.initialize());
@@ -46,7 +50,8 @@ app.use(cors(corsOptions));
 
 // Routes
 app.use('/api/auth', authRoutes);
-app.use('/api/users', userRoutes);
+app.use('/api/user', userRoutes);
+
 
 // Root Route
 app.get('/', (req, res) => {

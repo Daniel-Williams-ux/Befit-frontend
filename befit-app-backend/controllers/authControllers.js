@@ -3,6 +3,8 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { check, validationResult } = require('express-validator');
 
+
+
 // Generate JWT Token
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '1h' });
@@ -21,15 +23,17 @@ const sendTokenResponse = (user, res) => {
   res
     .cookie('token', token, cookieOptions)
     .status(200)
-    .json({ success: true, user, token });
+    .json({ success: true, user: { id: user._id, email: user.email }, token });
 };
 
-// Validate Registration Inputs
-const validateRegister = [
+// Validate Signup Inputs
+const validateSignup = [
   check('email').isEmail().withMessage('Invalid email'),
   check('password')
-    .isLength({ min: 6 })
-    .withMessage('Password must be at least 6 characters long'),
+    .isLength({ min: 8 })
+    .withMessage('Password must be at least 8 characters long')
+    .matches(/^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])/)
+    .withMessage('Password must include letters, numbers, and a special character'),
   (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -38,8 +42,23 @@ const validateRegister = [
     next();
   },
 ];
+// const validateSignup = [
+//   check('email').isEmail().withMessage('Invalid email'),
+//   check('password')
+//     .isLength({ min: 6 })
+//     .withMessage('Password must be at least 6 characters long'),
+//   (req, res, next) => {
+//     const errors = validationResult(req);
+//     if (!errors.isEmpty()) {
+//       console.error('Validation errors:', errors.array()); // Log validation errors
+//       return res.status(400).json({ errors: errors.array() });
+//     }
+//     next();
+//   },
+// ];
 
-// Validate Login Inputs
+
+// **Validate Login Inputs** (add this function)
 const validateLogin = [
   check('email').isEmail().withMessage('Invalid email'),
   check('password').notEmpty().withMessage('Password is required'),
@@ -53,7 +72,7 @@ const validateLogin = [
 ];
 
 // Register Controller
-const register = async (req, res) => {
+const signup = async (req, res) => {
   const { email, password } = req.body;
 
   try {
@@ -63,8 +82,13 @@ const register = async (req, res) => {
       return res.status(400).json({ message: 'User already exists' });
     }
 
+    // Hash the password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+    console.log('Hashed Password:', hashedPassword); // Log the hashed password
+
     // Create new user
-    const newUser = await User.create({ email, password });
+    const newUser = await User.create({ email, password: hashedPassword });
 
     // Send token as HTTP-only cookie
     sendTokenResponse(newUser, res);
@@ -73,28 +97,48 @@ const register = async (req, res) => {
   }
 };
 
-// Login Controller
-const login = async (req, res) => {
+async function login(req, res) {
   const { email, password } = req.body;
 
   try {
-    // Find user
+    // Find the user by email (and ensure password is included)
     const user = await User.findOne({ email }).select('+password');
     if (!user) {
-      return res.status(400).json({ message: 'Invalid Credentials' });
+      return res.status(400).json({ message: 'Invalid email or password' });
     }
 
-    // Check password
-    const isMatch = await user.matchPassword(password);
+    // Compare the entered password with the stored hash
+    const isMatch = await bcrypt.compare(password.trim(), user.password);
     if (!isMatch) {
-      return res.status(400).json({ message: 'Invalid Credentials' });
+      return res.status(400).json({ message: 'Invalid email or password' });
     }
 
-    // Send token as HTTP-only cookie
-    sendTokenResponse(user, res);
+    // Generate JWT token
+    const token = generateToken(user._id);
+
+    // Return success response with the token and user info
+    res.status(200).json({
+      success: true,
+      token,
+      user: {
+        id: user._id,
+        email: user.email,
+      },
+    });
   } catch (err) {
-    res.status(500).json({ message: 'Server Error', error: err.message });
+    console.error('Login error:', err);
+    res.status(500).json({
+      success: false,
+      message: 'Server Error',
+      error: err.message,
+    });
   }
 };
 
-module.exports = { login, register, validateLogin, validateRegister };
+
+module.exports = {
+  login,
+  signup,
+  validateSignup,
+  validateLogin, // Export validateLogin
+};

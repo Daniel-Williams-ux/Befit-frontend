@@ -2,46 +2,19 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
 const userSchema = new mongoose.Schema({
-  email: {
-    type: String,
-    required: true,
-    unique: true,
-  },
-  password: {
-    type: String,
-    required: false, // Optional for Google users
-  },
-  googleId: {
-    type: String,
-    unique: true,
-    sparse: true, // Allows email-only users
-  },
-  name: {
-    type: String,
-  },
-  gender: {
-    type: String,
-    enum: ['male', 'female', 'other'],
-  },
-  age: {
-    type: Number,
-  },
-  height: {
-    type: String,
-  },
-  weight: {
-    type: String,
-  },
-  goal: {
-    type: String,
-  },
-  lifestyle: {
-    type: String,
-  },
-  country: {
-    type: String,
-  },
+  name: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: false }, // Optional for Google login
+  googleId: { type: String, unique: true, sparse: true }, // To allow email-only users
+  gender: { type: String, required: true }, // Gender field to store user's choice
+  age: { type: Number, required: true },
+  height: { type: String, required: true },
+  weight: { type: String, required: true },
+  goal: { type: String, required: true }, // Fitness goal
+  lifestyle: { type: String, required: true }, // Lifestyle preference
+  country: { type: String, required: true }, // Country field
 });
+
 
 // Hash password before saving (only if modified and exists)
 userSchema.pre('save', async function (next) {
