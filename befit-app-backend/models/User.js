@@ -17,15 +17,20 @@ const userSchema = new mongoose.Schema({
   },
   age: {
     type: Number,
-    required: false, // Age can be added after Step 3
+    required: false, // Age is optional until Step 3 is completed
   },
   height: {
     type: Number,
-    required: false, // Height can be added after Step 3
+    required: false, // Height is optional until Step 3 is completed
   },
   weight: {
     type: Number,
-    required: false, // Weight can be added after Step 3
+    required: false, // Weight is optional until Step 3 is completed
+  },
+  goal: {
+    type: String,
+    enum: ["weight_loss", "muscle_gain", "maintain_fitness"],
+    required: false, // Fitness goal is optional until Step 4 is completed
   },
 });
 

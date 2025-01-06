@@ -170,3 +170,32 @@ exports.updateProfile = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+exports.updateGoal = async (req, res) => {
+  const { goal } = req.body;
+
+  // Validate the goal input
+  if (!goal) {
+    return res.status(400).json({ message: "Goal is required" });
+  }
+
+  if (!["weight_loss", "muscle_gain", "maintain_fitness"].includes(goal)) {
+    return res.status(400).json({ message: "Invalid goal" });
+  }
+
+  try {
+    const user = await User.findById(req.user.id); // Assuming `req.user` contains the authenticated user
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Update user's goal
+    user.goal = goal;
+    await user.save();
+
+    res.status(200).json({ message: "Fitness goal updated successfully" });
+  } catch (error) {
+    console.error("Error updating goal:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
