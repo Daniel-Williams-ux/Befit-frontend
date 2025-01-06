@@ -199,3 +199,57 @@ exports.updateGoal = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+exports.updateLifestyle = async (req, res) => {
+  const { lifestyle } = req.body;
+
+  // Validate the lifestyle input
+  if (!lifestyle) {
+    return res.status(400).json({ message: "Lifestyle is required" });
+  }
+
+  if (!["sedentary", "moderately_active", "very_active"].includes(lifestyle)) {
+    return res.status(400).json({ message: "Invalid lifestyle" });
+  }
+
+  try {
+    const user = await User.findById(req.user.id); // Assuming `req.user` contains the authenticated user
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Update user's lifestyle
+    user.lifestyle = lifestyle;
+    await user.save();
+
+    res.status(200).json({ message: "Lifestyle updated successfully" });
+  } catch (error) {
+    console.error("Error updating lifestyle:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+exports.updateCountry = async (req, res) => {
+  const { country } = req.body;
+
+  // Validate the country input
+  if (!country) {
+    return res.status(400).json({ message: "Country is required" });
+  }
+
+  try {
+    const user = await User.findById(req.user.id); // Assuming `req.user` contains the authenticated user
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Update user's country
+    user.country = country;
+    await user.save();
+
+    res.status(200).json({ message: "Country updated successfully" });
+  } catch (error) {
+    console.error("Error updating country:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};

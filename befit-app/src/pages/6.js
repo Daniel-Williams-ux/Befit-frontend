@@ -36,7 +36,7 @@ function Step6() {
       const data = await res.json();
 
       if (res.ok) {
-        router.push('/dashboard'); // Redirect to the dashboard (end of onboarding)
+        router.push('/about'); // Redirect to the dashboard (end of onboarding)
       } else {
         setError(data.message || 'Failed to save country');
       }

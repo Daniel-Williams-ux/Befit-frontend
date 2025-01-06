@@ -32,6 +32,15 @@ const userSchema = new mongoose.Schema({
     enum: ["weight_loss", "muscle_gain", "maintain_fitness"],
     required: false, // Fitness goal is optional until Step 4 is completed
   },
+  lifestyle: {
+    type: String,
+    enum: ["sedentary", "moderately_active", "very_active"],
+    required: false, // Lifestyle is optional until Step 5 is completed
+  },
+  country: {
+    type: String,
+    required: false, // Optional
+  },
 });
 
 // Hash password before saving
