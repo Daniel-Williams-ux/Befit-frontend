@@ -15,6 +15,18 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: false, // Gender is optional until Step 2 is completed
   },
+  age: {
+    type: Number,
+    required: false, // Age can be added after Step 3
+  },
+  height: {
+    type: Number,
+    required: false, // Height can be added after Step 3
+  },
+  weight: {
+    type: Number,
+    required: false, // Weight can be added after Step 3
+  },
 });
 
 // Hash password before saving

@@ -111,11 +111,44 @@
 //   saveStep6,
 //   getUserDetails,
 // };
+// userController.js
+
+const User = require('../models/User'); // Assuming you're using Mongoose for your User model
+
 exports.updateGender = async (req, res) => {
   const { gender } = req.body;
 
+  // Validate the gender input
   if (!gender) {
     return res.status(400).json({ message: "Gender is required" });
+  }
+
+  try {
+    // Assuming `req.user` contains the authenticated user
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Update the user's gender
+    user.gender = gender;
+    await user.save();
+
+    // Send the success response
+    res.status(200).json({ message: "Gender updated successfully" });
+  } catch (error) {
+    console.error("Error updating gender:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// Add the updateProfile function to handle age, height, and weight
+exports.updateProfile = async (req, res) => {
+  const { age, height, weight } = req.body;
+
+  // Validate that all fields are provided
+  if (!age || !height || !weight) {
+    return res.status(400).json({ message: "All fields are required" });
   }
 
   try {
@@ -124,12 +157,16 @@ exports.updateGender = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    user.gender = gender;
+    // Update the user's profile
+    user.age = age;
+    user.height = height;
+    user.weight = weight;
+
     await user.save();
 
-    res.status(200).json({ message: "Gender updated successfully" });
+    res.status(200).json({ message: "Profile updated successfully" });
   } catch (error) {
-    console.error("Error updating gender:", error);
+    console.error("Error updating profile:", error);
     res.status(500).json({ message: "Server error" });
   }
 };
