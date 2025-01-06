@@ -1,23 +1,23 @@
-import axios from 'axios';
+import axios from "axios";
 
 const checkAuth = async () => {
-  const token = localStorage.getItem('token');  // Get token from localStorage
-  if (!token) {
-    localStorage.removeItem('token'); // Clear invalid token
-    return false; // Indicate the user is not authenticated
-  }
-
   try {
-    // Send a request to an API route within your frontend to validate the token
-    await axios.get('/api/auth/check-token', {
-      headers: {
-        Authorization: `Bearer ${token}`,  // Pass token to the backend for validation
-      },
-    });
-    return true; // Token is valid
+    const token = localStorage.getItem("token");
+    if (!token) return false;
+
+    const response = await axios.get(
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/verify-token`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    return response.status === 200; // Return true if token is valid
   } catch (error) {
-    localStorage.removeItem('token');  // Clear invalid token
-    return false; // Indicate the user is not authenticated
+    console.error("Authentication check failed:", error);
+    return false; // Return false if the token is invalid or an error occurs
   }
 };
 

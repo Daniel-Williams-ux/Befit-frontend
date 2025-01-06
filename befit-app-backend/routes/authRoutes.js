@@ -1,9 +1,14 @@
 const express = require("express");
 const { check } = require("express-validator");
-const { signup } = require("../controllers/authControllers");
+const {
+  signup,
+  loginUser,
+  checkToken,
+} = require("../controllers/authControllers");
 
 const router = express.Router();
 
+// Route for signup
 router.post(
   "/signup",
   [
@@ -18,5 +23,11 @@ router.post(
   ],
   signup
 );
+
+// Route for login
+router.post("/login", loginUser);
+
+// Route for token validation (check-token)
+router.get("/check-token", checkToken);
 
 module.exports = router;
